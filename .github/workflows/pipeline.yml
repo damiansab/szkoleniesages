@@ -26,8 +26,8 @@ env:
   ARTIFACT_NAME: "shopping-app-artifact"
   ZIP_NAME: app.zip
   TERRAFORM_DIR: "terraform"
-  AZURE_RG: "ghashopdemo-rg"
-  AZURE_APP_NAME: "ghashopdemo-app"
+  AZURE_RG: "ghashopdemo-rg-ds"
+  AZURE_APP_NAME: "ghashopdemo-app-ds"
   ENV: 'dev' # needed for tfvars
 
 jobs:
