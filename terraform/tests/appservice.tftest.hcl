@@ -13,10 +13,10 @@ run "app_service_plan_sku" {
 
   # Needed to be injected for tests needs (cannot get from variables.tf or dev.tfvars)
   variables {
-    subscription_id = "63abcf25-b8df-4c76-8b31-5004c9ba37cd" #PAYG
-    rg_name         = "ghashopdemo-rg"
+    subscription_id = "8dac1cb1-7130-4137-a400-92c8b6c10bd9" #PAYG
+    rg_name         = "ghashopdemo-rg-ds"
     location        = "westeurope"
-    prefix          = "ghashopdemo"
+    prefix          = "ghashopdemo-ds"
     os_type         = "Linux"
     sku_name        = "F1"
   }
@@ -33,10 +33,10 @@ run "app_service_https_only" {
   
   # Needed to be injected for tests needs (cannot get from variables.tf or dev.tfvars)
   variables {
-    subscription_id = "63abcf25-b8df-4c76-8b31-5004c9ba37cd" #PAYG
-    rg_name         = "ghashopdemo-rg"
+    subscription_id = "8dac1cb1-7130-4137-a400-92c8b6c10bd9" #PAYG
+    rg_name         = "ghashopdemo-rg-ds"
     location        = "westeurope"
-    prefix          = "ghashopdemo"
+    prefix          = "ghashopdemo-ds"
     os_type         = "Linux"
     sku_name        = "F1"
   }

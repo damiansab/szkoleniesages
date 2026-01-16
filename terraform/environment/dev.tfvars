@@ -6,8 +6,8 @@
 # Modified by: Przemyslaw Chmielecki
 
 subscription_id   = "8dac1cb1-7130-4137-a400-92c8b6c10bd9" #PAYG
-prefix            = "ds"
-rg_name           = "ds-rg"
+prefix            = "ghashopdemo-ds"
+rg_name           = "ghashopdemo-ds-rg"
 location          = "westeurope"
 retention_in_days = 30
 # app_service_plan_name = "asp" #< --- in root main during calling ASP module
