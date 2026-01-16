@@ -1,0 +1,152 @@
+name: Build-Terraform-Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      runTerraformApply:
+        description: "Terraform apply"
+        required: true
+        type: boolean
+        default: true
+      runTerraformDestroy:
+        description: "Terraform destroy"
+        required: false
+        type: boolean
+        default: false
+      deployApp:
+        description: "Deploy app"
+        required: true
+        type: boolean
+        default: true
+
+env:
+  PYTHON_VERSION: "3.11"
+  ARTIFACT_NAME: "shopping-app-artifact"
+  ZIP_NAME: app.zip
+  TERRAFORM_DIR: "terraform"
+  AZURE_RG: "ghashopdemo-rg"
+  AZURE_APP_NAME: "ghashopdemo-app"
+  ENV: 'dev' # needed for tfvars
+
+jobs:
+################################################################################
+# BUILD PYTHON APP
+################################################################################
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r app/requirements.txt --target ./app/_packages || true
+
+      - name: Archive app into ZIP
+        run: |
+          cd app
+          zip -r ../${{ env.ZIP_NAME }} .
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.ZIP_NAME }}
+
+################################################################################
+# TERRAFORM
+################################################################################
+  terraform:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      #########################################################################
+      # TF LINTER
+      #########################################################################
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: Init TFLint (Azure ruleset)
+        run: |
+          tflint --init
+
+      - name: Run TFLint
+        run: |
+          tflint --recursive
+
+      #########################################################################
+      # TF VALIDATE AND TESTS
+      #########################################################################
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform plan -lock=false -var-file="./environment/${{ env.ENV }}.tfvars" -out=tfplan
+
+      - name: Terraform Unit Tests
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform test
+
+      #########################################################################
+      # TF APPLY OR DESTROY
+      #########################################################################
+      - name: Terraform Apply (conditional)
+        if: ${{ github.event.inputs.runTerraformApply == 'true' }}
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform apply -lock=false -auto-approve -var-file="./environment/${{ env.ENV }}.tfvars"
+
+      - name: Terraform Destroy (conditional)
+        if: ${{ github.event.inputs.runTerraformDestroy == 'true' }}
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform destroy -lock=false -auto-approve -var-file="./environment/${{ env.ENV }}.tfvars"
+
+################################################################################
+# DEPLOY APP TO AZURE WEB APP
+################################################################################
+  deploy:
+    runs-on: ubuntu-latest
+    needs: terraform
+    if: ${{ github.event.inputs.deployApp == 'true' }}
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Download ZIP artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+
+      - name: Deploy ZIP to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_APP_NAME }}
+          package: ${{ env.ZIP_NAME }}
