@@ -15,9 +15,9 @@ terraform {
   }
   # External tfstate location (Azure)
   backend "azurerm" {
-    resource_group_name  = "ghashopdemo-rg-ds"
-    storage_account_name = "ds"
-    container_name       = "ds"
+    resource_group_name  = "tfstate-damiansabaknew"
+    storage_account_name = "tfstatetedamiannew"
+    container_name       = "tfstate"
     key                  = "ds.tfstate"
   }
 }
