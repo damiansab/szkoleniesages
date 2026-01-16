@@ -1,5 +1,4 @@
 # 🛒 Azure Python Web App + Terraform + Azure DevOps
-
 **Fully automated deployment of a Python Flask web app with Azure App Service, Key Vault integration, Application Insights, and GitHub Actions multi-stage pipeline.**
 
 ---
