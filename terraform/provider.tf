@@ -15,10 +15,10 @@ terraform {
   }
   # External tfstate location (Azure)
   backend "azurerm" {
-    resource_group_name  = "python-terraform-ado"
-    storage_account_name = "tfstateforpythonapp"
-    container_name       = "tfstate-gha"
-    key                  = "terraform.tfstate"
+    resource_group_name  = "ghashopdemo-rg-ds"
+    storage_account_name = "ds"
+    container_name       = "ds"
+    key                  = "ds.tfstate"
   }
 }
 
